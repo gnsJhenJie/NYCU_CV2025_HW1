@@ -68,7 +68,8 @@ def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num
                 running_corrects += torch.sum(preds == labels.data)
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
-            epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
+            epoch_acc = running_corrects.double(
+            ) / len(dataloaders[phase].dataset)
             print(f'{phase} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
 
             # 將每個 phase 的 metrics 寫入 TensorBoard
@@ -77,7 +78,8 @@ def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num
 
             # 儲存訓練階段的 checkpoint (儲存至 log 目錄)
             if phase == 'train':
-                checkpoint_path = os.path.join(writer.log_dir, f'epoch_{epoch}.pth')
+                checkpoint_path = os.path.join(
+                    writer.log_dir, f'epoch_{epoch}.pth')
                 torch.save(model.state_dict(), checkpoint_path)
             else:
                 # 驗證階段更新最佳模型並應用早停法
@@ -94,7 +96,8 @@ def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num
 
         # 若驗證表現連續多個 epoch 沒有改善，則提前停止訓練
         if patience_counter >= patience:
-            print(f'Early stopping triggered after {patience} epochs without improvement.')
+            print(
+                f'Early stopping triggered after {patience} epochs without improvement.')
             break
 
     print('訓練完成')
@@ -115,7 +118,8 @@ def generate_predictions(model, test_loader, device, output_file='prediction.csv
             _, preds = torch.max(outputs, 1)
             preds = preds.cpu().numpy()
             for image_name, pred in zip(image_names, preds):
-                predictions.append({'image_name': image_name.replace(".jpg",""), 'pred_label': class_mapping[int(pred)] if class_mapping else int(pred)})
+                predictions.append({'image_name': image_name.replace(
+                    ".jpg", ""), 'pred_label': class_mapping[int(pred)] if class_mapping else int(pred)})
 
     df = pd.DataFrame(predictions)
     df.to_csv(output_file, index=False)
@@ -124,17 +128,25 @@ def generate_predictions(model, test_loader, device, output_file='prediction.csv
 
 def main():
     parser = argparse.ArgumentParser(description='影像分類訓練程式 - 使用預訓練模型')
-    parser.add_argument('--train-dir', type=str, required=True, help='訓練資料夾路徑 (例如：data/train)')
-    parser.add_argument('--val-dir', type=str, required=True, help='驗證資料夾路徑 (例如：data/val)')
-    parser.add_argument('--test-dir', type=str, required=True, help='測試資料夾路徑 (例如：data/test)')
-    parser.add_argument('--exp-name', type=str, default='exp1', help='實驗名稱 (TensorBoard log 目錄名稱)')
+    parser.add_argument('--train-dir', type=str,
+                        required=True, help='訓練資料夾路徑 (例如：data/train)')
+    parser.add_argument('--val-dir', type=str, required=True,
+                        help='驗證資料夾路徑 (例如：data/val)')
+    parser.add_argument('--test-dir', type=str, required=True,
+                        help='測試資料夾路徑 (例如：data/test)')
+    parser.add_argument('--exp-name', type=str, default='exp1',
+                        help='實驗名稱 (TensorBoard log 目錄名稱)')
     parser.add_argument('--epochs', type=int, default=60, help='訓練的 epoch 數')
     parser.add_argument('--batch-size', type=int, default=256, help='batch 大小')
     parser.add_argument('--lr', type=float, default=0.01, help='初始學習率')
-    parser.add_argument('--weight-decay', type=float, default=1e-4, help='優化器 weight decay')
-    parser.add_argument('--step-size', type=int, default=20, help='學習率調度器的 step size')
-    parser.add_argument('--gamma', type=float, default=0.1, help='學習率調度器的 gamma 參數')
-    parser.add_argument('--freeze-backbone', action='store_true', help='若設置，則凍結預訓練模型的 backbone 參數，只微調最後一層')
+    parser.add_argument('--weight-decay', type=float,
+                        default=1e-4, help='優化器 weight decay')
+    parser.add_argument('--step-size', type=int,
+                        default=20, help='學習率調度器的 step size')
+    parser.add_argument('--gamma', type=float, default=0.1,
+                        help='學習率調度器的 gamma 參數')
+    parser.add_argument('--freeze-backbone', action='store_true',
+                        help='若設置，則凍結預訓練模型的 backbone 參數，只微調最後一層')
     args = parser.parse_args()
 
     # 使用 arguments 指定的實驗名稱建立 TensorBoard SummaryWriter
@@ -181,36 +193,42 @@ def main():
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),  # 新增：垂直翻轉
             transforms.RandomRotation(30),     # 將旋轉角度由15擴大到30度
-            transforms.ColorJitter(brightness=0.6, contrast=0.6, saturation=0.6, hue=0.2),  # 更強的顏色抖動
-            transforms.RandomPerspective(distortion_scale=0.5, p=0.5),  # 新增：隨機透視變換
+            transforms.ColorJitter(
+                brightness=0.6, contrast=0.6, saturation=0.6, hue=0.2),  # 更強的顏色抖動
+            transforms.RandomPerspective(
+                distortion_scale=0.5, p=0.5),  # 新增：隨機透視變換
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225]),
+                                 std=[0.229, 0.224, 0.225]),
             transforms.RandomErasing(p=0.5)  # 新增：隨機遮擋部分區域
         ]),
         'val': transforms.Compose([
             transforms.Resize((448, 448)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
+                                 std=[0.229, 0.224, 0.225])
         ]),
         'test': transforms.Compose([
             transforms.Resize((448, 448)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
+                                 std=[0.229, 0.224, 0.225])
         ])
     }
 
-    train_dataset = datasets.ImageFolder(args.train_dir, transform=data_transforms['train'])
-    val_dataset = datasets.ImageFolder(args.val_dir, transform=data_transforms['val'])
-    test_dataset = TestDataset(args.test_dir, transform=data_transforms['test'])
+    train_dataset = datasets.ImageFolder(
+        args.train_dir, transform=data_transforms['train'])
+    val_dataset = datasets.ImageFolder(
+        args.val_dir, transform=data_transforms['val'])
+    test_dataset = TestDataset(
+        args.test_dir, transform=data_transforms['test'])
 
     dataloaders = {
         'train': DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4),
         'val': DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
     }
-    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+    test_loader = DataLoader(
+        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
 
     # 使用預訓練的 ResNet50 模型，並在最後全連接層前加入 Dropout
     model = models.resnet50(pretrained=models.ResNet50_Weights.IMAGENET1K_V2)
@@ -221,7 +239,7 @@ def main():
         nn.Linear(num_features, len(train_dataset.classes))
     )
     print("Data classes:", train_dataset.classes)
-    
+
     if args.freeze_backbone:
         for param in model.parameters():
             param.requires_grad = False
@@ -229,15 +247,18 @@ def main():
         for param in model.fc.parameters():
             param.requires_grad = True
         print("Backbone 凍結，僅微調最後一層")
-    
+
     model = model.to(device)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.step_size, gamma=args.gamma)
+    optimizer = optim.SGD(model.parameters(), lr=args.lr,
+                          momentum=0.9, weight_decay=args.weight_decay)
+    scheduler = optim.lr_scheduler.StepLR(
+        optimizer, step_size=args.step_size, gamma=args.gamma)
 
     # 訓練模型，並使用早停法防止過擬合
-    model = train_model(model, criterion, optimizer, scheduler, dataloaders, device, args.epochs, writer, patience=10)
+    model = train_model(model, criterion, optimizer, scheduler,
+                        dataloaders, device, args.epochs, writer, patience=10)
 
     # 將最佳模型權重儲存到 log 目錄中
     best_model_path = os.path.join(log_dir, 'best_model.pth')
@@ -245,7 +266,8 @@ def main():
     print(f'模型權重已儲存至 {best_model_path}')
 
     output_file = os.path.join(log_dir, 'prediction.csv')
-    generate_predictions(model, test_loader, device, output_file=output_file, class_mapping=train_dataset.classes)
+    generate_predictions(model, test_loader, device,
+                         output_file=output_file, class_mapping=train_dataset.classes)
     writer.close()
 
 
