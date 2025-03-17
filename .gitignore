@@ -1,3 +1,11 @@
+# Dataset
+/data/train
+/data/val
+/data/test
+
+# Model checkpoints
+*.pth
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
