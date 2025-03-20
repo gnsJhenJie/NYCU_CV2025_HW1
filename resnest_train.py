@@ -235,11 +235,11 @@ def main():
         args.test_dir, transform=data_transforms['test'])
 
     dataloaders = {
-        'train': DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4),
-        'val': DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+        'train': DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8),
+        'val': DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)
     }
     test_loader = DataLoader(
-        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)
 
     # 建立 ResNeSt101 模型並修改最後全連接層：包含 dropout
     model = resnest101(pretrained=True)

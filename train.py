@@ -30,7 +30,7 @@ class TestDataset(Dataset):
         return image, image_name
 
 
-def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num_epochs, writer, patience=10):
+def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num_epochs, writer, patience=20):
     best_acc = 0.0
     best_model_wts = None
     patience_counter = 0  # early stopping counter
@@ -161,8 +161,8 @@ def main():
         "- RandomResizedCrop(224, scale=(0.5, 1.0)): 隨機裁剪並調整大小，較大範圍的隨機裁剪\n"
         "- RandomHorizontalFlip(): 隨機左右翻轉\n"
         "- RandomVerticalFlip(): 隨機上下翻轉\n"
-        "- RandomRotation(30): 隨機旋轉 ±30 度\n"
-        "- ColorJitter(brightness=0.6, contrast=0.6, saturation=0.6, hue=0.2): 調整亮度、對比、飽和度及色調\n"
+        "- RandomRotation(40): 隨機旋轉 ±30 度\n"
+        "- ColorJitter(brightness=0.7, contrast=0.7, saturation=0.7, hue=0.3): 調整亮度、對比、飽和度及色調\n"
         "- RandomPerspective(distortion_scale=0.5, p=0.5): 隨機透視變換\n"
         "- RandomErasing(p=0.5): 隨機遮擋部分區域"
     )
@@ -177,7 +177,7 @@ def main():
         'step_size': args.step_size,
         'gamma': args.gamma,
         'freeze_backbone': args.freeze_backbone,
-        'model': 'ResNet50 with Dropout',
+        'model': 'ResNet101 with Dropout',
         'data_augmentation': da_description
     }
     writer.add_text('Hyperparameters', json.dumps(hparams, indent=4))
@@ -189,12 +189,12 @@ def main():
     # 定義更強的 Data augmentation 設定：訓練階段增加更多隨機變換
     data_transforms = {
         'train': transforms.Compose([
-            transforms.RandomResizedCrop(448, scale=(0.5, 1.0)),  # 擴大隨機裁剪範圍
+            transforms.RandomResizedCrop(224, scale=(0.5, 1.0)),  # 擴大隨機裁剪範圍
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),  # 新增：垂直翻轉
-            transforms.RandomRotation(30),     # 將旋轉角度由15擴大到30度
+            transforms.RandomRotation(40),     # 將旋轉角度由15擴大到30度
             transforms.ColorJitter(
-                brightness=0.6, contrast=0.6, saturation=0.6, hue=0.2),  # 更強的顏色抖動
+                brightness=0.7, contrast=0.7, saturation=0.7, hue=0.3),  # 更強的顏色抖動
             transforms.RandomPerspective(
                 distortion_scale=0.5, p=0.5),  # 新增：隨機透視變換
             transforms.ToTensor(),
@@ -203,13 +203,13 @@ def main():
             transforms.RandomErasing(p=0.5)  # 新增：隨機遮擋部分區域
         ]),
         'val': transforms.Compose([
-            transforms.Resize((448, 448)),
+            transforms.Resize((224, 224)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
         ]),
         'test': transforms.Compose([
-            transforms.Resize((448, 448)),
+            transforms.Resize((224, 224)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
@@ -224,14 +224,14 @@ def main():
         args.test_dir, transform=data_transforms['test'])
 
     dataloaders = {
-        'train': DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4),
-        'val': DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+        'train': DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8),
+        'val': DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)
     }
     test_loader = DataLoader(
-        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4)
+        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)
 
-    # 使用預訓練的 ResNet50 模型，並在最後全連接層前加入 Dropout
-    model = models.resnet50(pretrained=models.ResNet50_Weights.IMAGENET1K_V2)
+    # 使用預訓練的 ResNet101 模型，並在最後全連接層前加入 Dropout
+    model = models.resnet101(pretrained=models.ResNet50_Weights.IMAGENET1K_V2)
 
     num_features = model.fc.in_features
     model.fc = nn.Sequential(
@@ -258,7 +258,7 @@ def main():
 
     # 訓練模型，並使用早停法防止過擬合
     model = train_model(model, criterion, optimizer, scheduler,
-                        dataloaders, device, args.epochs, writer, patience=10)
+                        dataloaders, device, args.epochs, writer, patience=20)
 
     # 將最佳模型權重儲存到 log 目錄中
     best_model_path = os.path.join(log_dir, 'best_model.pth')
