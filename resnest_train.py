@@ -9,15 +9,17 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
 from PIL import Image
 import numpy as np
-from resnest.torch import resnest50, resnest101  # 請先安裝 resnest 套件
+from collections import Counter
+from resnest.torch import resnest101
+# from resnest.torch import resnest50
 
 # 若有多卡可考慮加速
 torch.backends.cudnn.benchmark = True
 
-# 自訂測試資料集：假設 test 資料夾內只有影像檔案，檔名即為識別 id
-
 
 class TestDataset(Dataset):
+    # 自訂測試資料集：假設 test 資料夾內只有影像檔案，檔名即為識別 id
+
     def __init__(self, test_dir, transform=None):
         self.test_dir = test_dir
         self.transform = transform
@@ -34,10 +36,9 @@ class TestDataset(Dataset):
             image = self.transform(image)
         return image, image_name
 
-# 實作 mixup (可選)
-
 
 def mixup_data(x, y, alpha=0.4, device='cuda'):
+    # 實作 mixup (可選)
     if alpha > 0:
         lam = np.random.beta(alpha, alpha)
     else:
@@ -49,10 +50,12 @@ def mixup_data(x, y, alpha=0.4, device='cuda'):
     y_a, y_b = y, y[index]
     return mixed_x, y_a, y_b, lam
 
-# 訓緓與驗證模型函式，內建 mixup 與 early stopping
 
+def train_model(model, criterion, optimizer, scheduler, dataloaders,
+                device, num_epochs, writer, use_mixup=False,
+                mixup_alpha=0.4, patience=10):
+    # 訓緓與驗證模型函式，內建 mixup 與 early stopping
 
-def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num_epochs, writer, use_mixup=False, mixup_alpha=0.4, patience=10):
     best_acc = 0.0
     best_model_wts = None
     patience_counter = 0  # early stopping 計數器
@@ -135,10 +138,11 @@ def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num
         model.load_state_dict(best_model_wts)
     return model
 
-# 產生測試預測
 
-
-def generate_predictions(model, test_loader, device, output_file='prediction.csv', class_mapping=None):
+def generate_predictions(
+        model, test_loader, device, output_file='prediction.csv',
+        class_mapping=None):
+    # 產生測試預測
     model.eval()
     predictions = []
     with torch.no_grad():
@@ -148,10 +152,10 @@ def generate_predictions(model, test_loader, device, output_file='prediction.csv
             _, preds = torch.max(outputs, 1)
             preds = preds.cpu().numpy()
             for image_name, pred in zip(image_names, preds):
-                predictions.append({
-                    'image_name': image_name.replace(".jpg", ""),
-                    'pred_label': class_mapping[int(pred)] if class_mapping else int(pred)
-                })
+                predictions.append(
+                    {'image_name': image_name.replace(".jpg", ""),
+                     'pred_label': class_mapping[int(pred)]
+                     if class_mapping else int(pred)})
     import pandas as pd
     df = pd.DataFrame(predictions)
     df.to_csv(output_file, index=False)
@@ -185,8 +189,9 @@ def main():
                         help='Use mixup augmentation during training')
     parser.add_argument('--mixup-alpha', type=float,
                         default=0.4, help='Alpha parameter for mixup')
-    parser.add_argument('--freeze-backbone', action='store_true',
-                        help='Freeze backbone parameters (only train classifier)')
+    parser.add_argument(
+        '--freeze-backbone', action='store_true',
+        help='Freeze backbone parameters (only train classifier)')
     args = parser.parse_args()
 
     log_dir = os.path.join('runs', args.exp_name)
@@ -260,8 +265,24 @@ def main():
 
     model = model.to(device)
 
-    criterion = nn.CrossEntropyLoss()
-    # 使用 AdamW 優化器（你也可以嘗試 SGD）
+    # 結合 train 與 val 的標籤數據
+    combined_targets = train_dataset.targets + val_dataset.targets
+
+    # 計算各類別在 train+val 中的數量
+    combined_counts = Counter(combined_targets)
+    print("Combined class counts:", combined_counts)
+
+    # 計算總樣本數（train + val）
+    total_samples = len(combined_targets)
+    num_classes = len(train_dataset.classes)
+
+    # 計算每個類別的權重：使用總樣本數除以該類別數量
+    class_weights = [total_samples / combined_counts[i]
+                     for i in range(num_classes)]
+    class_weights = torch.tensor(class_weights).to(device)
+
+    criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.1)
+    # 使用 AdamW 優化器 (SGD could be used as well)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr,
                             weight_decay=args.weight_decay)
     # 使用 Cosine Annealing 調度器
@@ -297,8 +318,9 @@ def main():
 
     # 產生測試集預測結果
     output_file = os.path.join(log_dir, 'prediction.csv')
-    generate_predictions(model, test_loader, device,
-                         output_file=output_file, class_mapping=train_dataset.classes)
+    generate_predictions(
+        model, test_loader, device, output_file=output_file,
+        class_mapping=train_dataset.classes)
     writer.close()
 
 

@@ -30,7 +30,9 @@ class TestDataset(Dataset):
         return image, image_name
 
 
-def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num_epochs, writer, patience=20):
+def train_model(
+    model, criterion, optimizer, scheduler, dataloaders, device,
+        num_epochs, writer, patience=20):
     best_acc = 0.0
     best_model_wts = None
     patience_counter = 0  # early stopping counter
@@ -107,7 +109,9 @@ def train_model(model, criterion, optimizer, scheduler, dataloaders, device, num
     return model
 
 
-def generate_predictions(model, test_loader, device, output_file='prediction.csv', class_mapping=None):
+def generate_predictions(
+        model, test_loader, device, output_file='prediction.csv',
+        class_mapping=None):
     model.eval()
     predictions = []
 
@@ -118,8 +122,10 @@ def generate_predictions(model, test_loader, device, output_file='prediction.csv
             _, preds = torch.max(outputs, 1)
             preds = preds.cpu().numpy()
             for image_name, pred in zip(image_names, preds):
-                predictions.append({'image_name': image_name.replace(
-                    ".jpg", ""), 'pred_label': class_mapping[int(pred)] if class_mapping else int(pred)})
+                predictions.append(
+                    {'image_name': image_name.replace(".jpg", ""),
+                     'pred_label': class_mapping[int(pred)]
+                     if class_mapping else int(pred)})
 
     df = pd.DataFrame(predictions)
     df.to_csv(output_file, index=False)
@@ -164,8 +170,7 @@ def main():
         "- RandomRotation(40): 隨機旋轉 ±30 度\n"
         "- ColorJitter(brightness=0.7, contrast=0.7, saturation=0.7, hue=0.3): 調整亮度、對比、飽和度及色調\n"
         "- RandomPerspective(distortion_scale=0.5, p=0.5): 隨機透視變換\n"
-        "- RandomErasing(p=0.5): 隨機遮擋部分區域"
-    )
+        "- RandomErasing(p=0.5): 隨機遮擋部分區域")
 
     # 記錄超參數設定：包含 data augmentation 說明
     hparams = {
@@ -266,8 +271,9 @@ def main():
     print(f'模型權重已儲存至 {best_model_path}')
 
     output_file = os.path.join(log_dir, 'prediction.csv')
-    generate_predictions(model, test_loader, device,
-                         output_file=output_file, class_mapping=train_dataset.classes)
+    generate_predictions(
+        model, test_loader, device, output_file=output_file,
+        class_mapping=train_dataset.classes)
     writer.close()
 
 
