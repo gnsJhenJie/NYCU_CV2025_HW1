@@ -198,17 +198,17 @@ def main():
         'train': transforms.Compose([
             transforms.RandomResizedCrop(224, scale=(0.5, 1.0)),  # 擴大隨機裁剪範圍
             transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip(),  # 新增：垂直翻轉
+            transforms.RandomVerticalFlip(),  # 垂直翻轉
             transforms.RandomRotation(40),     # 將旋轉角度由15擴大到30度
             transforms.ColorJitter(
                 brightness=0.7, contrast=0.7,
                 saturation=0.7, hue=0.3),  # 更強的顏色抖動
             transforms.RandomPerspective(
-                distortion_scale=0.5, p=0.5),  # 新增：隨機透視變換
+                distortion_scale=0.5, p=0.5),  # 隨機透視變換
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225]),
-            transforms.RandomErasing(p=0.5)  # 新增：隨機遮擋部分區域
+            transforms.RandomErasing(p=0.5)  # 隨機遮擋部分區域
         ]),
         'val': transforms.Compose([
             transforms.Resize((224, 224)),
