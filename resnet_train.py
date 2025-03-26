@@ -169,8 +169,8 @@ def main():
         "- RandomHorizontalFlip(): 隨機左右翻轉\n"
         "- RandomVerticalFlip(): 隨機上下翻轉\n"
         "- RandomRotation(40): 隨機旋轉 ±30 度\n"
-        "- ColorJitter(brightness=0.7, contrast=0.7, saturation=0.7, hue=0.3): \
-            調整亮度、對比、飽和度及色調\n"
+        "- ColorJitter(brightness=0.7, contrast=0.7, saturation=0.7, hue=0.3)\
+            : 調整亮度、對比、飽和度及色調\n"
         "- RandomPerspective(distortion_scale=0.5, p=0.5): 隨機透視變換\n"
         "- RandomErasing(p=0.5): 隨機遮擋部分區域")
 
@@ -201,7 +201,8 @@ def main():
             transforms.RandomVerticalFlip(),  # 新增：垂直翻轉
             transforms.RandomRotation(40),     # 將旋轉角度由15擴大到30度
             transforms.ColorJitter(
-                brightness=0.7, contrast=0.7, saturation=0.7, hue=0.3),  # 更強的顏色抖動
+                brightness=0.7, contrast=0.7, 
+                saturation=0.7, hue=0.3),  # 更強的顏色抖動
             transforms.RandomPerspective(
                 distortion_scale=0.5, p=0.5),  # 新增：隨機透視變換
             transforms.ToTensor(),
@@ -232,8 +233,8 @@ def main():
 
     dataloaders = {
         'train': DataLoader(train_dataset, batch_size=args.batch_size,
-                             shuffle=True, num_workers=8),
-        'val': DataLoader(val_dataset, batch_size=args.batch_size, 
+                            shuffle=True, num_workers=8),
+        'val': DataLoader(val_dataset, batch_size=args.batch_size,
                           shuffle=False, num_workers=8)
     }
     test_loader = DataLoader(

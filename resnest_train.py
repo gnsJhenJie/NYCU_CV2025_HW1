@@ -242,9 +242,9 @@ def main():
 
     dataloaders = {
         'train': DataLoader(train_dataset, batch_size=args.batch_size,
-                             shuffle=True, num_workers=8),
+                            shuffle=True, num_workers=8),
         'val': DataLoader(val_dataset, batch_size=args.batch_size,
-                           shuffle=False, num_workers=8)
+                          shuffle=False, num_workers=8)
     }
     test_loader = DataLoader(
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)
