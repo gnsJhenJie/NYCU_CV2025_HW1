@@ -129,7 +129,8 @@ def train_model(model, criterion, optimizer, scheduler, dataloaders,
 
         if patience_counter >= patience:
             print(
-                f'Early stopping triggered after {patience} epochs without improvement.')
+                f'Early stopping triggered after {patience} epochs \
+                    without improvement.')
             break
 
     print('Training complete')
@@ -240,8 +241,10 @@ def main():
         args.test_dir, transform=data_transforms['test'])
 
     dataloaders = {
-        'train': DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8),
-        'val': DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)
+        'train': DataLoader(train_dataset, batch_size=args.batch_size,
+                             shuffle=True, num_workers=8),
+        'val': DataLoader(val_dataset, batch_size=args.batch_size,
+                           shuffle=False, num_workers=8)
     }
     test_loader = DataLoader(
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)

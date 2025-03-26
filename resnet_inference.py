@@ -134,9 +134,9 @@ def main():
     val_dataset = datasets.ImageFolder(args.val_dir, transform=eval_transform)
     test_dataset = TestDataset(args.test_dir, transform=eval_transform)
 
-    train_loader = DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=False,
-        num_workers=args.num_workers)
+    # train_loader = DataLoader(
+    #     train_dataset, batch_size=args.batch_size, shuffle=False,
+    #     num_workers=args.num_workers)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size,
                             shuffle=False, num_workers=args.num_workers)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size,

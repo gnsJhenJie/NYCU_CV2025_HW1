@@ -119,7 +119,8 @@ def main():
                         help="Number of data loader workers")
     parser.add_argument(
         '--with-prob', action='store_true',
-        help="If set, for predictions with max probability < 0.7 sample based on distribution; otherwise use max")
+        help="If set, for predictions with max probability < 0.7 \
+              sample based on distribution; otherwise use max")
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

@@ -99,7 +99,8 @@ def train_model(
         # 若驗證表現連續多個 epoch 沒有改善，則提前停止訓練
         if patience_counter >= patience:
             print(
-                f'Early stopping triggered after {patience} epochs without improvement.')
+                f'Early stopping triggered after {patience} \
+                    epochs without improvement.')
             break
 
     print('訓練完成')
@@ -168,7 +169,8 @@ def main():
         "- RandomHorizontalFlip(): 隨機左右翻轉\n"
         "- RandomVerticalFlip(): 隨機上下翻轉\n"
         "- RandomRotation(40): 隨機旋轉 ±30 度\n"
-        "- ColorJitter(brightness=0.7, contrast=0.7, saturation=0.7, hue=0.3): 調整亮度、對比、飽和度及色調\n"
+        "- ColorJitter(brightness=0.7, contrast=0.7, saturation=0.7, hue=0.3): \
+            調整亮度、對比、飽和度及色調\n"
         "- RandomPerspective(distortion_scale=0.5, p=0.5): 隨機透視變換\n"
         "- RandomErasing(p=0.5): 隨機遮擋部分區域")
 
@@ -229,8 +231,10 @@ def main():
         args.test_dir, transform=data_transforms['test'])
 
     dataloaders = {
-        'train': DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8),
-        'val': DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)
+        'train': DataLoader(train_dataset, batch_size=args.batch_size,
+                             shuffle=True, num_workers=8),
+        'val': DataLoader(val_dataset, batch_size=args.batch_size, 
+                          shuffle=False, num_workers=8)
     }
     test_loader = DataLoader(
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)
