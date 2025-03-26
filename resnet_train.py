@@ -201,7 +201,7 @@ def main():
             transforms.RandomVerticalFlip(),  # 新增：垂直翻轉
             transforms.RandomRotation(40),     # 將旋轉角度由15擴大到30度
             transforms.ColorJitter(
-                brightness=0.7, contrast=0.7, 
+                brightness=0.7, contrast=0.7,
                 saturation=0.7, hue=0.3),  # 更強的顏色抖動
             transforms.RandomPerspective(
                 distortion_scale=0.5, p=0.5),  # 新增：隨機透視變換
